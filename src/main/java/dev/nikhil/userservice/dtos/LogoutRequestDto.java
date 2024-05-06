@@ -2,8 +2,10 @@ package dev.nikhil.userservice.dtos;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class LogoutRequestDto {
-    private Long userId;
+    private UUID userId;
     private String token;
 }

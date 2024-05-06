@@ -18,6 +18,7 @@ import org.springframework.util.MultiValueMapAdapter;
 
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -64,6 +65,7 @@ public class AuthService {
         Session session = new Session();
         session.setStatus(SessionStatus.ACTIVE);
         session.setUser(user);
+        session.setToken(token);
         sessionRepository.save(session);
 
         ResponseEntity<UserDto> response = new ResponseEntity<>(userDto, headers, HttpStatus.OK);
@@ -71,7 +73,7 @@ public class AuthService {
         return response;
     }
 
-    public ResponseEntity<Void> logout(String token, Long userId) {
+    public ResponseEntity<Void> logout(String token, UUID userId) {
         Optional<Session> sessionOptional = sessionRepository.findByTokenAndUser_Id(token, userId);
 
         if (sessionOptional.isEmpty()) {
@@ -87,21 +89,25 @@ public class AuthService {
         return ResponseEntity.ok().build();
     }
 
-    public SessionStatus validate(String token, Long userId) {
+    public Optional<UserDto> validate(String token, UUID userId) {
         Optional<Session> sessionOptional = sessionRepository.findByTokenAndUser_Id(token, userId);
         if (sessionOptional.isEmpty()) {
-            return SessionStatus.INVALID;
+            return Optional.empty();
         }
 
         Session session = sessionOptional.get();
         if (session.getStatus() != SessionStatus.ACTIVE) {
-            return SessionStatus.EXPIRED;
+            return Optional.empty();
         }
+
+        User user = userRepository.findById(userId).orElse(null);
+        UserDto userDto = UserDto.from(user);
+
 //        if(!(session.getExpiresAt() > new Date()))
 //        {
 //            return SessionStatus.EXPIRED;
 //        }
-        return SessionStatus.ACTIVE;
+        return Optional.of(userDto);
     }
 
 
